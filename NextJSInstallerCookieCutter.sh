@@ -14,9 +14,9 @@ function echoLog {
 }
 
 # get app name and set it to defualt
-read -r -p "app name:(app) " appName
+read -r -p "app name:(web) " appName
 if [[ -z "${appName}" ]]; then
-    appName="app"
+    appName="web"
 fi
 
 # --------------------------------+
@@ -24,7 +24,7 @@ fi
 # --------------------------------+
 
 # install blank typescript expo app
-npx create-expo-app "$appName" --typescript
+npx create-next-app "$appName" --typescript --eslint
 cd "$appName" || exit
 
 echoLog "✅ $appName install done"
@@ -37,12 +37,23 @@ cat > "./pages/index.tsx" <<- EOM
 // base
 import * as React from "react";
 
-export default function Home(props: NativeStackScreenProps<pagesType, "home">) {
+export default function Home() {
     return (
-        <div className="w-screen h-screen items-center justify-center">
+        <div className="flex w-screen h-screen items-center justify-center">
             <label>your app is ready !!!</label>
         </div>
     );
+}
+EOM
+
+cat > "./pages/_app.tsx" <<- EOM
+import '@/styles/globals.css'
+import type { AppProps } from 'next/app'
+import { Provider } from 'react-redux'
+import { store } from "@/store/store"
+
+export default function App({ Component, pageProps }: AppProps) {
+  return <Provider store={store}><Component {...pageProps} /></Provider>
 }
 EOM
 
@@ -56,17 +67,22 @@ mkdir components
 echo "installing tailwind ..."
 
 # install tailwind
-npm install tailwindcss
+npm install -D tailwindcss postcss autoprefixer
 npm install prettier prettier-plugin-tailwindcss
-npx tailwindcss init
+npx tailwindcss init -p
 
 
+# config tailwind
+cat > "./styles/globals.css" <<- EOM
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+EOM
 # config tailwind
 cat > "./tailwind.config.js" <<- EOM
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
-    './App.{js,jsx,ts,tsx}', 
     './pages/**/*.{js,jsx,ts,tsx}', 
     './components/**/*.{js,jsx,ts,tsx}'
   ],
